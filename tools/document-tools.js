@@ -49,8 +49,6 @@ window.FileForge.DocumentTools = (function () {
 
   function isUnsupported(subtool) {
     return [
-      'word-to-excel',
-      'excel-to-word',
       'excel-to-jpg',
       'powerpoint-to-pdf',
       'powerpoint-to-jpg',
@@ -62,10 +60,10 @@ window.FileForge.DocumentTools = (function () {
 
     const titles = {
       'excel-to-pdf': { title: 'Excel to PDF', desc: 'Convert spreadsheet worksheets and CSV data into clean, accurately aligned PDF documents.' },
+      'excel-to-word': { title: 'Excel to Word', desc: 'Convert spreadsheet tables into formatted, editable Word (.docx) documents.' },
+      'word-to-excel': { title: 'Word to Excel', desc: 'Extract tables and structured data from Word (.docx) documents into Excel spreadsheets.' },
       'word-to-pdf': { title: 'Word to PDF', desc: 'Convert supported Word (.docx) documents into formatted PDF files.' },
       'word-to-jpg': { title: 'Word to JPG', desc: 'Render Word document pages into image previews.' },
-      'word-to-excel': { title: 'Word to Excel', desc: 'Convert Word tables into Excel spreadsheets.' },
-      'excel-to-word': { title: 'Excel to Word', desc: 'Convert spreadsheet sheets into Word document format.' },
       'excel-to-jpg': { title: 'Excel to JPG', desc: 'Render spreadsheets as image files.' },
       'powerpoint-to-pdf': { title: 'PowerPoint to PDF', desc: 'Convert PPTX presentation slides into PDF.' },
       'powerpoint-to-jpg': { title: 'PowerPoint to JPG', desc: 'Export presentation slides as JPG images.' },
@@ -131,9 +129,9 @@ window.FileForge.DocumentTools = (function () {
               </div>
             </div>
 
-            <!-- PDF Layout & Styling Settings (Only for Excel to PDF) -->
+            <!-- Settings Grid -->
             ${
-              activeSubtool.includes('excel')
+              activeSubtool === 'excel-to-pdf'
                 ? `
               <div class="tool-settings-grid" id="excelPdfSettingsGrid">
                 <div class="setting-group" id="sheetSelectGroup" style="display: none;">
@@ -164,6 +162,39 @@ window.FileForge.DocumentTools = (function () {
                 </div>
               </div>
             `
+                : activeSubtool === 'excel-to-word'
+                ? `
+              <div class="tool-settings-grid" id="excelWordSettingsGrid">
+                <div class="setting-group" id="sheetSelectGroup" style="display: none;">
+                  <label class="setting-label"><span>Active Sheet</span></label>
+                  <select id="excelSheetSelect"></select>
+                </div>
+                <div class="setting-group">
+                  <label class="setting-label"><span>Table Theme</span></label>
+                  <select id="excelWordTheme">
+                    <option value="indigo" selected>Modern Indigo (Vibrant header & violet borders)</option>
+                    <option value="slate">Corporate Slate (Executive dark header)</option>
+                    <option value="emerald">Emerald Forest (Teal header & mint accents)</option>
+                    <option value="minimal">Minimal Classic (Clean border lines, subtle zebra)</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label class="setting-label"><span>Page Orientation</span></label>
+                  <select id="excelWordOrientation">
+                    <option value="auto" selected>Auto (Landscape for wide tables)</option>
+                    <option value="landscape">Landscape</option>
+                    <option value="portrait">Portrait</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label class="setting-label"><span>Include Sheet Header</span></label>
+                  <select id="excelWordTitle">
+                    <option value="yes" selected>Yes (Add sheet title above table)</option>
+                    <option value="no">Table Only</option>
+                  </select>
+                </div>
+              </div>
+            `
                 : ''
             }
 
@@ -173,7 +204,7 @@ window.FileForge.DocumentTools = (function () {
             <!-- Action Controls -->
             <div style="display: flex; justify-content: flex-end; gap: 14px; flex-wrap: wrap;">
               ${
-                activeSubtool.includes('excel')
+                activeSubtool === 'excel-to-pdf'
                   ? `
                 <button class="btn btn-outline btn-lg" id="printDocPdfBtn" type="button">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -183,8 +214,34 @@ window.FileForge.DocumentTools = (function () {
                   : ''
               }
               <button class="btn btn-primary btn-lg" id="exportDocPdfBtn" type="button">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Download PDF</span>
+                ${
+                  activeSubtool === 'excel-to-word'
+                    ? `
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  <span>Download Word Document (.docx)</span>
+                `
+                    : activeSubtool === 'word-to-excel'
+                    ? `
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                  </svg>
+                  <span>Download Excel (.xlsx)</span>
+                `
+                    : `
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Download PDF</span>
+                `
+                }
               </button>
             </div>
           </div>
@@ -241,7 +298,11 @@ window.FileForge.DocumentTools = (function () {
     });
 
     exportBtn.addEventListener('click', () => {
-      if (activeSubtool.includes('excel')) {
+      if (activeSubtool === 'excel-to-word') {
+        generateDirectExcelWord(container);
+      } else if (activeSubtool === 'word-to-excel') {
+        generateDirectWordExcel(container);
+      } else if (activeSubtool.includes('excel')) {
         generateDirectExcelPdf(container);
       } else {
         exportWordToPdf(container);
@@ -708,6 +769,340 @@ window.FileForge.DocumentTools = (function () {
       console.error('PDF Generation error:', err);
       window.FileForge.showToast('Direct PDF failed, opening Print dialog...', 'info');
       printExcelToPdf(container);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Pure Client-Side Excel to Word (.docx) Engine via JSZip
+  // -------------------------------------------------------------
+  function escapeDocxXml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  async function buildDocxFromSpreadsheet(sheetName, aoa, alignments, options = {}) {
+    if (!window.JSZip) {
+      throw new Error('JSZip library is required to build Word documents');
+    }
+
+    const {
+      theme = 'indigo',
+      orientation = 'auto',
+      includeTitle = true,
+    } = options;
+
+    const zip = new JSZip();
+
+    // 1. [Content_Types].xml
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+    zip.file('[Content_Types].xml', contentTypesXml);
+
+    // 2. _rels/.rels
+    const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+    zip.folder('_rels').file('.rels', relsXml);
+
+    // 3. word/_rels/document.xml.rels
+    const docRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+    zip.folder('word').folder('_rels').file('document.xml.rels', docRelsXml);
+
+    // 4. word/styles.xml
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault>
+      <w:rPr>
+        <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>
+        <w:sz w:val="22"/>
+        <w:szCs w:val="22"/>
+        <w:lang w:val="en-US"/>
+      </w:rPr>
+    </w:rPrDefault>
+  </w:docDefaults>
+</w:styles>`;
+    zip.folder('word').file('styles.xml', stylesXml);
+
+    // Themes
+    const themes = {
+      indigo: {
+        headerBg: '4338CA',
+        headerText: 'FFFFFF',
+        altBg: 'F5F3FF',
+        border: 'C7D2FE',
+        titleColor: '312E81',
+      },
+      slate: {
+        headerBg: '1E293B',
+        headerText: 'FFFFFF',
+        altBg: 'F8FAFC',
+        border: 'CBD5E1',
+        titleColor: '0F172A',
+      },
+      emerald: {
+        headerBg: '065F46',
+        headerText: 'FFFFFF',
+        altBg: 'ECFDF5',
+        border: 'A7F3D0',
+        titleColor: '064E3B',
+      },
+      minimal: {
+        headerBg: '334155',
+        headerText: 'FFFFFF',
+        altBg: 'FAFAFA',
+        border: 'E2E8F0',
+        titleColor: '1E293B',
+      },
+    };
+    const t = themes[theme] || themes.indigo;
+
+    let numCols = 0;
+    aoa.forEach((row) => {
+      if (row && row.length > numCols) numCols = row.length;
+    });
+
+    const isLandscape = orientation === 'landscape' || (orientation === 'auto' && numCols > 6);
+
+    let docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <w:body>`;
+
+    if (includeTitle && sheetName) {
+      docXml += `
+    <w:p>
+      <w:pPr>
+        <w:jc w:val="left"/>
+        <w:spacing w:after="240" w:before="0"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:sz w:val="36"/>
+          <w:color w:val="${t.titleColor}"/>
+        </w:rPr>
+        <w:t xml:space="preserve">${escapeDocxXml(sheetName)}</w:t>
+      </w:r>
+    </w:p>`;
+    }
+
+    docXml += `
+    <w:tbl>
+      <w:tblPr>
+        <w:tblW w:w="5000" w:type="pct"/>
+        <w:tblBorders>
+          <w:top w:val="single" w:sz="6" w:space="0" w:color="${t.border}"/>
+          <w:left w:val="single" w:sz="6" w:space="0" w:color="${t.border}"/>
+          <w:bottom w:val="single" w:sz="6" w:space="0" w:color="${t.border}"/>
+          <w:right w:val="single" w:sz="6" w:space="0" w:color="${t.border}"/>
+          <w:insideH w:val="single" w:sz="4" w:space="0" w:color="${t.border}"/>
+          <w:insideV w:val="single" w:sz="4" w:space="0" w:color="${t.border}"/>
+        </w:tblBorders>
+        <w:tblCellMar>
+          <w:top w:w="120" w:type="dxa"/>
+          <w:bottom w:w="120" w:type="dxa"/>
+          <w:left w:w="140" w:type="dxa"/>
+          <w:right w:w="140" w:type="dxa"/>
+        </w:tblCellMar>
+      </w:tblPr>`;
+
+    aoa.forEach((row, rIdx) => {
+      const isHeader = rIdx === 0;
+      const isAlt = !isHeader && rIdx % 2 === 1;
+      const cellBg = isHeader ? t.headerBg : isAlt ? t.altBg : 'FFFFFF';
+      const textColor = isHeader ? t.headerText : '1E293B';
+      const fontSize = isHeader ? '20' : '19';
+
+      docXml += `
+      <w:tr>
+        <w:trPr>
+          ${isHeader ? '<w:tblHeader/>' : ''}
+          <w:cantSplit/>
+        </w:trPr>`;
+
+      for (let c = 0; c < numCols; c++) {
+        const val = row && row[c] !== undefined && row[c] !== null ? String(row[c]) : '';
+        const align = (alignments && alignments[c]) || 'left';
+
+        docXml += `
+        <w:tc>
+          <w:tcPr>
+            <w:shd w:val="clear" w:color="auto" w:fill="${cellBg}"/>
+            <w:tcMar>
+              <w:top w:w="100" w:type="dxa"/>
+              <w:bottom w:w="100" w:type="dxa"/>
+              <w:left w:w="120" w:type="dxa"/>
+              <w:right w:w="120" w:type="dxa"/>
+            </w:tcMar>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="${align}"/>
+              <w:spacing w:after="0" w:before="0"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+                ${isHeader ? '<w:b/>' : ''}
+                <w:color w:val="${textColor}"/>
+                <w:sz w:val="${fontSize}"/>
+              </w:rPr>
+              <w:t xml:space="preserve">${escapeDocxXml(val)}</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>`;
+      }
+
+      docXml += `
+      </w:tr>`;
+    });
+
+    docXml += `
+    </w:tbl>
+    <w:p><w:pPr><w:spacing w:after="0"/></w:pPr></w:p>
+    <w:sectPr>
+      <w:pgSz w:w="${isLandscape ? '15840' : '12240'}" w:h="${isLandscape ? '12240' : '15840'}" w:orient="${isLandscape ? 'landscape' : 'portrait'}"/>
+      <w:pgMar w:top="${isLandscape ? '1080' : '1440'}" w:right="${isLandscape ? '1080' : '1440'}" w:bottom="${isLandscape ? '1080' : '1440'}" w:left="${isLandscape ? '1080' : '1440'}"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+
+    zip.folder('word').file('document.xml', docXml);
+
+    const docxBlob = await zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 },
+    });
+
+    return docxBlob;
+  }
+
+  async function generateDirectExcelWord(container) {
+    if (!window.JSZip) {
+      window.FileForge.showToast('JSZip library not loaded.', 'error');
+      return;
+    }
+    if (!currentSheetData || currentSheetData.length === 0) {
+      window.FileForge.showToast('No spreadsheet data to convert.', 'error');
+      return;
+    }
+
+    window.FileForge.showToast('Generating formatted Word (.docx) document...', 'info');
+
+    try {
+      const theme = container.querySelector('#excelWordTheme') ? container.querySelector('#excelWordTheme').value : 'indigo';
+      const orientation = container.querySelector('#excelWordOrientation') ? container.querySelector('#excelWordOrientation').value : 'auto';
+      const includeTitle = container.querySelector('#excelWordTitle') ? container.querySelector('#excelWordTitle').value === 'yes' : true;
+
+      const docxBlob = await buildDocxFromSpreadsheet(currentSheetName, currentSheetData, columnAlignments, {
+        theme,
+        orientation,
+        includeTitle,
+      });
+
+      const baseName = currentFile ? currentFile.name.replace(/\.[^/.]+$/, '') : 'document';
+      const cleanSheetName = currentSheetName ? currentSheetName.replace(/[^a-zA-Z0-9_-]/g, '_') : 'Sheet';
+      const filename = `${baseName}-${cleanSheetName}.docx`;
+
+      if (window.FileForge && typeof window.FileForge.downloadBlob === 'function') {
+        window.FileForge.downloadBlob(docxBlob, filename);
+      } else if (typeof window.saveAs === 'function') {
+        window.saveAs(docxBlob, filename);
+      } else {
+        const url = URL.createObjectURL(docxBlob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (a.parentNode) a.parentNode.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 4000);
+      }
+
+      window.FileForge.showToast('Word document (.docx) generated and downloaded!', 'success');
+    } catch (err) {
+      console.error('Word generation error:', err);
+      window.FileForge.showToast('Failed to generate Word document: ' + err.message, 'error');
+    }
+  }
+
+  async function generateDirectWordExcel(container) {
+    if (!window.XLSX) {
+      window.FileForge.showToast('SheetJS library not loaded.', 'error');
+      return;
+    }
+    if (!parsedWordHtml) {
+      window.FileForge.showToast('No Word content to convert.', 'error');
+      return;
+    }
+
+    window.FileForge.showToast('Extracting spreadsheet tables...', 'info');
+
+    try {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = parsedWordHtml;
+
+      const tables = tempDiv.querySelectorAll('table');
+      const wb = XLSX.utils.book_new();
+
+      if (tables.length > 0) {
+        tables.forEach((tbl, idx) => {
+          const ws = XLSX.utils.table_to_sheet(tbl);
+          XLSX.utils.book_append_sheet(wb, ws, `Table_${idx + 1}`);
+        });
+      } else {
+        const pList = tempDiv.querySelectorAll('p, h1, h2, h3, li');
+        const rows = [];
+        pList.forEach((el) => {
+          const txt = el.textContent.trim();
+          if (txt) {
+            if (txt.includes('\t')) {
+              rows.push(txt.split('\t'));
+            } else if (txt.includes(' : ') || txt.includes(': ')) {
+              rows.push(txt.split(/:\s+/));
+            } else {
+              rows.push([txt]);
+            }
+          }
+        });
+        const ws = XLSX.utils.aoa_to_sheet(rows.length > 0 ? rows : [['Document Text', tempDiv.textContent.trim()]]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Extracted Data');
+      }
+
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const baseName = currentFile ? currentFile.name.replace(/\.[^/.]+$/, '') : 'word-export';
+      const filename = `${baseName}.xlsx`;
+
+      if (window.FileForge && typeof window.FileForge.downloadBlob === 'function') {
+        window.FileForge.downloadBlob(blob, filename);
+      } else if (typeof window.saveAs === 'function') {
+        window.saveAs(blob, filename);
+      }
+
+      window.FileForge.showToast('Excel spreadsheet (.xlsx) extracted and downloaded!', 'success');
+    } catch (err) {
+      console.error('Word to Excel error:', err);
+      window.FileForge.showToast('Extraction failed: ' + err.message, 'error');
     }
   }
 
